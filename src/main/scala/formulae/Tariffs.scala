@@ -1,4 +1,4 @@
-package Formulae
+package formulae
 
 /**
   * Created by Matt on 20/05/2017.
