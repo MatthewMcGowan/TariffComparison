@@ -13,16 +13,15 @@ import scala.util.Try
 class TariffParser {
 
   implicit val rateReads: Reads[Rates] = (
-    (__ \ "power").readNullable[Double] and
-      (__ \ "gas").readNullable[Double]
+    (__ \ "power").readNullable[BigDecimal] and
+      (__ \ "gas").readNullable[BigDecimal]
     )(Rates.apply _)
 
   implicit val tariffReads: Reads[Tariff] = (
     (__ \ "tariff").read[String] and
       (__ \ "rates").read[Rates] and
-      (__ \ "standing_charge").read[Double]
+      (__ \ "standing_charge").read[BigDecimal]
     )(Tariff.apply _)
-
 
   def parse(json: String): Option[Seq[Tariff]] = {
     val j = Try(Json.parse(json)).toOption

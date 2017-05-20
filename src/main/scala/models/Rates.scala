@@ -3,4 +3,4 @@ package models
 /**
   * Created by Matt on 20/05/2017.
   */
-case class Rates(power: Option[Double], gas: Option[Double])
+case class Rates(power: Option[BigDecimal], gas: Option[BigDecimal])
