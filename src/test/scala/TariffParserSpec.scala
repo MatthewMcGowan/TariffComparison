@@ -17,10 +17,18 @@ class TariffParserSpec extends FunSpec {
         }
       }
       describe("with multiple tariffs present") {
-        it("should return all tariffs") {
+        it("should return correct number of tariffs") {
           val ts = tariffParser.parse(mutlipleTariffJson).get
           assert(ts == tariffs)
         }
+
+        it("should return tariffs correctly deserialised") {
+          val ts = tariffParser.parse(mutlipleTariffJson).get
+          ts.forall(tariffs.contains(_))
+        }
+
+        // Although the sequential implementation results in input order being preserved, this is not in spec.
+        // Seq in this case is still chosen over Iterable though for API.
       }
       describe("with no tariffs present") {
         it("should return an empty List") {

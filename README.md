@@ -12,7 +12,6 @@ Name | Version
 Scala | 2.12
  
 ### Developed with
-Developed and tested with:
 
 Name | Version
 --- | ---

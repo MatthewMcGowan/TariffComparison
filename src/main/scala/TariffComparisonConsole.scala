@@ -1,4 +1,4 @@
-import commands.{CostCalc, UsageCalc}
+import commands.{CostCalculator, UsageCalculator}
 import models.{FuelType, Tariff}
 
 import scala.annotation.tailrec
@@ -11,14 +11,15 @@ import scala.util.Try
   */
 object TariffComparisonConsole extends App {
   val tariffParser = new TariffParser
-  val costCalc = new CostCalc
-  val usageCalc = new UsageCalc
+  val costCalc = new CostCalculator
+  val usageCalc = new UsageCalculator
   val vatRate = 5
 
   val tariffJson = fromResource("prices.json").getLines().mkString("\n")
   val tariffs = tariffParser.parse(tariffJson)
 
   tariffs match {
+    case Some(Nil) => println("No tariff data in provided prices.json. Exiting.")
     case Some(x) => processUserCommands(x)
     case None => println("Tariff data in prices.json cannot be parsed. Exiting.")
   }
@@ -59,7 +60,7 @@ object TariffComparisonConsole extends App {
     val g = toNonZeroUsage(gasUsage.get)
 
     if (powerUsage.isEmpty || gasUsage.isEmpty)
-      println("Arguments for cost command must be integer values")
+      println("Arguments for cost command must be valid integer values")
     else {
       val costs = costCalc.costs(tariffs, p, g, vatRate)
       costs.foreach(c => println(s"${c._1} ${dFormat(c._2)}"))
