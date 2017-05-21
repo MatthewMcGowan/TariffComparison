@@ -17,7 +17,7 @@ class CostCalculator {
   Seq[(String, BigDecimal)] = {
 
     def calc(t: Tariff): Option[(String, BigDecimal)] = {
-      val standingCharge = tarFuncs.annualStandingCharge(t.standingCharge)
+      val standingCharge = tarFuncs.annualCost(t.standingCharge)
 
       def energyCost(usage: Option[Int], rate: Option[BigDecimal]): Option[BigDecimal] = {
         // If used but no rate, not an applicable tariff
