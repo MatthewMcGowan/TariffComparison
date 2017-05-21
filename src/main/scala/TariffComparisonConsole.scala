@@ -20,8 +20,12 @@ object TariffComparisonConsole extends App {
 
   tariffs match {
     case Some(Nil) => println("No tariff data in provided prices.json. Exiting.")
-    case Some(x) => processUserCommands(x)
     case None => println("Tariff data in prices.json cannot be parsed. Exiting.")
+    case Some(x) => {
+      val tNames = x.map(_.tariff)
+      if(tNames.distinct.size != tNames.size) println("Tariff data contains duplicate tariff name. Exiting.")
+      else processUserCommands(x)
+    }
   }
 
   @tailrec
@@ -68,7 +72,7 @@ object TariffComparisonConsole extends App {
   }
 
   def usageReq(input: Array[String], tariffs: Seq[Tariff]): Unit = {
-    val tariff = input(1)
+    val tariffName = input(1)
     val fuelType = FuelType.fromString(input(2))
     val targetSpend = tryToDouble(input(3))
 
@@ -77,8 +81,15 @@ object TariffComparisonConsole extends App {
     else if (fuelType.isEmpty)
       println("Invalid fuel type provided.")
     else{
-      val annualConsumption = usageCalc.usage(tariffs, tariff, fuelType.get, targetSpend.get, vatRate)
-      println(annualConsumption)
+      val t = tariffs.find(_.tariff == tariffName)
+
+      t match {
+        case Some(x) => {
+          val annualConsumption = usageCalc.usage(t.get, fuelType.get, targetSpend.get, vatRate)
+          println(annualConsumption)
+        }
+        case None => println("Invalid tariff name provided.")
+      }
     }
   }
 
