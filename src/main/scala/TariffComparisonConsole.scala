@@ -80,15 +80,14 @@ object TariffComparisonConsole extends App {
       println("Target spend must be valid number.")
     else if (fuelType.isEmpty)
       println("Invalid fuel type provided.")
-    else{
+    else if (tariffs.count(_.tariff == tariffName) < 1)
+      println("No tariff data found for given tariff name.")
+    else {
       val t = tariffs.find(_.tariff == tariffName)
-
-      t match {
-        case Some(x) => {
-          val annualConsumption = usageCalc.usage(t.get, fuelType.get, targetSpend.get, vatRate)
-          println(annualConsumption)
-        }
-        case None => println("Invalid tariff name provided.")
+      val annualConsumption = usageCalc.usage(t.get, fuelType.get, targetSpend.get, vatRate)
+      annualConsumption match {
+        case Some(c) => println(annualConsumption)
+        case None => println("Tariff does not contain data for this fuel type.")
       }
     }
   }
