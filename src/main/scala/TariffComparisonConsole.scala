@@ -24,7 +24,10 @@ object TariffComparisonConsole extends App {
     case Some(x) => {
       val tNames = x.map(_.tariff)
       if(tNames.distinct.size != tNames.size) println("Tariff data contains duplicate tariff name. Exiting.")
-      else processUserCommands(x)
+      else {
+        printIntro()
+        processUserCommands(x)
+      }
     }
   }
 
@@ -86,7 +89,7 @@ object TariffComparisonConsole extends App {
       val t = tariffs.find(_.tariff == tariffName)
       val annualConsumption = usageCalc.usage(t.get, fuelType.get, targetSpend.get, vatRate)
       annualConsumption match {
-        case Some(c) => println(annualConsumption)
+        case Some(c) => println(dFormat(c))
         case None => println("Tariff does not contain data for this fuel type.")
       }
     }
