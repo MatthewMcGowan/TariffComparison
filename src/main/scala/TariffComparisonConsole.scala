@@ -9,6 +9,9 @@ import scala.util.Try
 
 /**
   * Created by Matt on 20/05/2017.
+  *
+  * Responsible for running the application in the console.
+  * Responsible for handling IO with user.
   */
 object TariffComparisonConsole extends App {
   val config = ConfigFactory.load()
@@ -18,6 +21,7 @@ object TariffComparisonConsole extends App {
   val usageCalc = new UsageCalculator
   val vatRate = config.getInt("calcuationConstants.vatPercent")
 
+  // Load the JSON, treated like user input
   val tariffJson = fromResource("prices.json").getLines().mkString("\n")
   val tariffs = tariffParser.parse(tariffJson)
 
@@ -26,7 +30,8 @@ object TariffComparisonConsole extends App {
     case None => println("Tariff data in prices.json cannot be parsed. Exiting.")
     case Some(x) => {
       val tNames = x.map(_.tariff)
-      if(tNames.distinct.size != tNames.size) println("Tariff data contains duplicate tariff name. Exiting.")
+      if(tNames.distinct.size != tNames.size)
+        println("Tariff data contains duplicate tariff name. Exiting.")
       else {
         printIntro()
         processUserCommands(x)
@@ -34,6 +39,7 @@ object TariffComparisonConsole extends App {
     }
   }
 
+  // With the prices.json loaded, we loop around this method continually
   @tailrec
   def processUserCommands(tariffs: Seq[Tariff]): Unit = {
     val input = readLine().split(' ')
@@ -57,10 +63,13 @@ object TariffComparisonConsole extends App {
     }
   }
 
+  // Handle a "cost" input
   def costReq(input: Array[String], tariffs: Seq[Tariff]): Unit = {
     val powerUsage = tryToInt(input(1))
     val gasUsage = tryToInt(input(2))
 
+    // If input usage is zero, we take this to mean customer is not supplied with this energy type.
+    // We replace sentinel value with None.
     def toNonZeroUsage(u: Int) = u match {
       case 0 => None
       case _ => Some(u)
@@ -82,6 +91,7 @@ object TariffComparisonConsole extends App {
     val fuelType = FuelType.fromString(input(2))
     val targetSpend = tryToDouble(input(3))
 
+    // Validate all the input...
     if (targetSpend.isEmpty)
       println("Target spend must be valid number.")
     else if (fuelType.isEmpty)
@@ -90,6 +100,8 @@ object TariffComparisonConsole extends App {
       println("No tariff data found for given tariff name.")
     else {
       val t = tariffs.find(_.tariff == tariffName)
+
+      // Calculate the annual consumption
       val annualConsumption = usageCalc.usage(t.get, fuelType.get, targetSpend.get, vatRate)
       annualConsumption match {
         case Some(c) => println(dFormat(c))
