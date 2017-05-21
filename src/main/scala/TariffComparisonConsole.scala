@@ -1,3 +1,4 @@
+import com.typesafe.config.ConfigFactory
 import commands.{CostCalculator, UsageCalculator}
 import models.{FuelType, Tariff}
 
@@ -10,10 +11,12 @@ import scala.util.Try
   * Created by Matt on 20/05/2017.
   */
 object TariffComparisonConsole extends App {
+  val config = ConfigFactory.load()
+
   val tariffParser = new TariffParser
   val costCalc = new CostCalculator
   val usageCalc = new UsageCalculator
-  val vatRate = 5
+  val vatRate = config.getInt("calcuationConstants.vatPercent")
 
   val tariffJson = fromResource("prices.json").getLines().mkString("\n")
   val tariffs = tariffParser.parse(tariffJson)
