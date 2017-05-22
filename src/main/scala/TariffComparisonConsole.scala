@@ -1,3 +1,4 @@
+import TariffCustomTypes.Percent
 import com.typesafe.config.ConfigFactory
 import commands.{CostCalculator, UsageCalculator}
 import models.{FuelType, Tariff}
@@ -19,7 +20,7 @@ object TariffComparisonConsole extends App {
   val tariffParser = new TariffParser
   val costCalc = new CostCalculator
   val usageCalc = new UsageCalculator
-  val vatRate = config.getInt("calcuationConstants.vatPercent")
+  val vatRate: Percent = config.getDouble("calcuationConstants.vatPercent")
 
   // Load the JSON, treated like user input
   val tariffJson = fromResource("prices.json").getLines().mkString("\n")
@@ -65,41 +66,44 @@ object TariffComparisonConsole extends App {
 
   // Handle a "cost" input
   def costReq(input: Array[String], tariffs: Seq[Tariff]): Unit = {
-    val powerUsage = tryToInt(input(1))
-    val gasUsage = tryToInt(input(2))
-
-    // If input usage is zero, we take this to mean customer is not supplied with this energy type.
-    // We replace sentinel value with None.
     def toNonZeroUsage(u: Int) = u match {
       case 0 => None
       case _ => Some(u)
     }
 
-    val p = toNonZeroUsage(powerUsage.get)
-    val g = toNonZeroUsage(gasUsage.get)
+    // Get the command arguments, if they're supplied
+    val powerUsage = Try(input(1)).toOption.flatMap(tryToInt)
+    val gasUsage = Try(input(2)).toOption.flatMap(tryToInt)
 
+    // Ensure arguments are valid
     if (powerUsage.isEmpty || gasUsage.isEmpty)
-      println("Arguments for cost command must be valid integer values")
+      println("Arguments for cost command must be present, valid integer values")
     else {
+      // If input usage is zero, we take this to mean customer is not supplied with this energy type.
+      // We replace sentinel value with None.
+      val p = powerUsage.flatMap(toNonZeroUsage)
+      val g = gasUsage.flatMap(toNonZeroUsage)
+
+      // Calculate and print
       val costs = costCalc.costs(tariffs, p, g, vatRate)
       costs.foreach(c => println(s"${c._1} ${dFormat(c._2)}"))
     }
   }
 
   def usageReq(input: Array[String], tariffs: Seq[Tariff]): Unit = {
-    val tariffName = input(1)
-    val fuelType = FuelType.fromString(input(2))
-    val targetSpend = tryToDouble(input(3))
+    val tariffName = Try(input(1)).toOption
+    val fuelType = Try(input(2)).toOption.flatMap(FuelType.fromString)
+    val targetSpend = Try(input(3)).toOption.flatMap(tryToDouble)
 
     // Validate all the input...
-    if (targetSpend.isEmpty)
-      println("Target spend must be valid number.")
+    if (tariffName.isEmpty || tariffs.count(_.tariff == tariffName.get) < 1)
+      println("Tariff name must be provided for a Tariff in prices.json.")
     else if (fuelType.isEmpty)
-      println("Invalid fuel type provided.")
-    else if (tariffs.count(_.tariff == tariffName) < 1)
-      println("No tariff data found for given tariff name.")
+      println("Fuel type must be present and a valid value.")
+    else if (targetSpend.isEmpty)
+      println("Target spend must be present and a valid number.")
     else {
-      val t = tariffs.find(_.tariff == tariffName)
+      val t = tariffs.find(_.tariff == tariffName.get)
 
       // Calculate the annual consumption
       val annualConsumption = usageCalc.usage(t.get, fuelType.get, targetSpend.get, vatRate)

@@ -19,8 +19,8 @@ class UsageCalculator {
     }
 
     def calcAnnualUse(rate: BigDecimal, standingCharge: BigDecimal, spend: BigDecimal) = {
-      val preTaxSpend = taxFuncs.toNetPrice(spend, vatRate)
-      val annualPreTaxSpend = tarFuncs.annualCost(preTaxSpend)
+      val monthlyPreTaxSpend = taxFuncs.toNetPrice(spend, vatRate)
+      val annualPreTaxSpend = tarFuncs.annualCost(monthlyPreTaxSpend)
       val annualPreTaxStanding = tarFuncs.annualCost(standingCharge)
       val annualVariableSpend = annualPreTaxSpend - annualPreTaxStanding
 
